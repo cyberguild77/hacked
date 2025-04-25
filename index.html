@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>!!! CYBERGUILD ALERT !!!</title>
+  <style>
+    html, body {
+      margin: 0; padding: 0; height: 100%; width: 100%;
+      background: black; color: #FF0000;
+      font-family: 'Impact', Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+      font-size: 5.5vmin; overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      text-align: center;
+      animation: flash 0.07s infinite alternate;
+      cursor: none; position: relative; z-index: 1;
+    }
+    body::after {
+      content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.05) 1px, transparent 1px, transparent 4px);
+      z-index: 2; pointer-events: none; opacity: 0.7;
+    }
+    @keyframes flash { from { background: black; color: #FF0000; } to { background: #FF0000; color: black; } }
+    #warning { font-size: 1.2em; font-weight: bold; text-shadow: 3px 3px 5px #000, 0 0 15px #800000; letter-spacing: 2px; margin-bottom: 15px; z-index: 3; position: relative; }
+    #skull { font-size: 15vmin; margin: 5px 0; animation: pulse 0.5s infinite alternate; z-index: 3; position: relative; }
+    @keyframes pulse { from { transform: scale(1); text-shadow: 0 0 10px black; } to { transform: scale(1.05); text-shadow: 0 0 20px black, 0 0 30px #333; } }
+    #cyber { font-size: 0.7em; color: white; text-shadow: 0 0 15px red, 0 0 8px red; margin-top: 15px; margin-bottom: 20px; font-family: 'Courier New', monospace; letter-spacing: 1px; z-index: 3; position: relative; }
+    .extra-info { font-family: 'Courier New', monospace; font-size: 0.5em; color: #00FF00; text-shadow: 0 0 8px #008000; margin-top: 8px; letter-spacing: 1px; z-index: 3; position: relative; }
+  </style>
+</head>
+<body>
+
+  <div id="warning">⚠ SYSTEM COMPROMISED ⚠</div>
+  <div id="skull">☠️</div>
+  <div id="cyber">CYBERGU!LD IS IN CONTROL NOW!!!</div>
+
+  <div class="extra-info" id="ip-address">TRACKING YOUR IP...</div>
+  <div class="extra-info" id="status-line">STATUS: INITIATING PROTOCOLS...</div>
+
+  <audio id="background-audio" loop>
+    <source src="https://cdn.discordapp.com/attachments/1364409204227571825/1365131281175810110/n9UJx8W.mp3?ex=680c3114&is=680adf94&hm=24b29f97544822d087d6a84a26a499823076c5f65c2cda27d36841e906899e98&" type="audio/mpeg">
+    Your browser does not support the audio element.
+  </audio>
+
+  <script>
+    const audioElement = document.getElementById('background-audio');
+    const ipAddressElement = document.getElementById('ip-address');
+    const statusLineElement = document.getElementById('status-line');
+
+    function fetchAndDisplayIP() {
+      fetch('https://api.ipify.org?format=json')
+        .then(response => response.ok ? response.json() : Promise.reject('Network failure'))
+        .then(data => {
+          if (ipAddressElement && data.ip) {
+            ipAddressElement.textContent = `IP TRACKED: ${data.ip}`;
+            statusLineElement.textContent = `STATUS: Connection Established [ ${data.ip} ]`;
+          } else {
+             ipAddressElement.textContent = 'IP TRACKED: N/A';
+             statusLineElement.textContent = `STATUS: Tracking Failed`;
+          }
+        })
+        .catch(error => {
+          console.error('Error fetching IP:', error);
+          if (ipAddressElement) ipAddressElement.textContent = 'IP TRACKED: ERROR';
+          if (statusLineElement) statusLineElement.textContent = `STATUS: CONNECTION ERROR`;
+        });
+    }
+    fetchAndDisplayIP();
+
+    function attemptAudioPlay() {
+      if (audioElement) {
+        audioElement.volume = 1.0;
+        audioElement.play().catch(error => {
+           console.warn(`AUDIO AUTOPLAY FAILED (expected without user interaction): ${error.message}`);
+        });
+      }
+    }
+
+    function attemptFullscreen() {
+      const elem = document.documentElement;
+      let fullscreenPromise = null;
+      if (elem.requestFullscreen) { fullscreenPromise = elem.requestFullscreen(); }
+      else if (elem.mozRequestFullScreen) { elem.mozRequestFullScreen(); }
+      else if (elem.webkitRequestFullscreen) { fullscreenPromise = elem.webkitRequestFullscreen(); }
+      else if (elem.msRequestFullscreen) { elem.msRequestFullscreen(); }
+
+      if (fullscreenPromise && fullscreenPromise.catch) {
+          fullscreenPromise.catch(err => {
+              console.warn(`AUTO FULLSCREEN FAILED (expected without user interaction): ${err.message}`);
+          });
+      } else if (!fullscreenPromise && !document.fullscreenElement && !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement ) {
+          console.warn(`AUTO FULLSCREEN FAILED (expected without user interaction).`);
+      }
+    }
+
+    setTimeout(() => {
+      console.log("Attempting auto fullscreen and audio playback after 6s...");
+      attemptFullscreen();
+      attemptAudioPlay();
+    }, 6000);
+
+    setTimeout(() => {
+      alert("!!! INTRUSION COMPLETE !!!\nYOUR SYSTEM BELONGS TO CYBERGU!LD NOW.\nTHERE IS NO ESCAPE.");
+    }, 8000);
+
+  </script>
+</body>
+</html>
